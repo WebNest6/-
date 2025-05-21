@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Поле Чудес</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #2c2f77, #4b1a6e);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+
+    .game-container {
+      width: 100%;
+      max-width: 600px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      margin-top: 20px;
+    }
+
+    .hint {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 10px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+
+    .word-display {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 20px 0;
+      flex-wrap: wrap;
+    }
+
+    .letter-box {
+      width: 30px;
+      height: 40px;
+      border-bottom: 2px solid white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .keyboard {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .key {
+      background: linear-gradient(to right, #4f46e5, #7c3aed);
+      border: none;
+      color: white;
+      padding: 10px;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .key:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+
+    .key:hover:not(:disabled) {
+      transform: scale(1.05);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(to right, #10b981, #064e3b);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: linear-gradient(to right, #3b82f6, #1d4ed8);
+      color: white;
+    }
+
+    .status {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 1.2rem;
+      color: #10b981;
+    }
+
+    .settings {
+      margin-top: 20px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+    }
+
+    .settings h2 {
+      font-size: 1.2rem;
+      margin-bottom: 10px;
+    }
+
+    .mode-buttons,
+    .level-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .mode-buttons button,
+    .level-buttons button {
+      flex: 1;
+      min-width: 130px;
+      padding: 8px;
+      font-size: 0.9rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .mode-buttons button.active,
+    .level-buttons button.active {
+      background: #facc15;
+      color: black;
+    }
+
+    .scores {
+      margin-top: 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .player-score {
+      flex: 1 1 45%;
+      min-width: 120px;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      text-align: center;
+      transition: outline 0.2s;
+    }
+
+    .active-player {
+      outline: 2px solid gold;
+    }
+
+    footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Поле Чудес</h1>
+
+  <div class="game-container">
+    <div class="settings">
+      <h2>Режим игры</h2>
+      <div class="mode-buttons">
+        <button data-mode="single" data-players="1" class="active">Один игрок</button>
+        <button data-mode="multi" data-players="2">2 игрока</button>
+        <button data-mode="multi" data-players="3">3 игрока</button>
+        <button data-mode="multi" data-players="4">4 игрока</button>
+        <button data-mode="multi" data-players="5">5 игроков</button>
+        <button data-mode="multi" data-players="6">6 игроков</button>
+      </div>
+      <h2>Сложность</h2>
+      <div class="level-buttons">
+        <button data-level="easy" class="active">Легкий</button>
+        <button data-level="medium">Средний</button>
+        <button data-level="hard">Сложный</button>
+      </div>
+    </div>
+
+    <div class="hint" id="hint"></div>
+
+    <div class="word-display" id="wordDisplay"></div>
+
+    <div class="keyboard" id="keyboard"></div>
+
+    <input type="text" id="guessInput" placeholder="Введите слово целиком" />
+    <button class="btn-primary" onclick="guessWord()">Угадать слово</button>
+
+    <button class="btn-secondary" onclick="startNewGame()">Новая игра</button>
+
+    <div class="status" id="status"></div>
+
+    <div class="scores" id="scores"></div>
+  </div>
+
+  <footer>
+    &copy; 2025 Поле Чудес. Все права защищены.
+  </footer>
+
+  <script>
+    const wordsByDifficulty = {
+      easy: [
+        { word: "СОЛНЦЕ", hint: "Главный источник света на Земле" },
+        { word: "МОРЕ", hint: "Большой водоём, покрытый водой" },
+        { word: "ГОРА", hint: "Высокая возвышенность над уровнем земли" },
+        { word: "ДОМ", hint: "Место, где живут люди" },
+      ],
+      medium: [
+        { word: "ИНТЕРНЕТ", hint: "Глобальная компьютерная сеть" },
+        { word: "КОМПЬЮТЕР", hint: "Электронное устройство для работы и игр" },
+        { word: "ТЕЛЕФОН", hint: "Устройство для связи на расстоянии" },
+      ],
+      hard: [
+        { word: "ИНФОРМАЦИОННАЯ БЕЗОПАСНОСТЬ", hint: "Защита данных от несанкционированного доступа" },
+        { word: "ЭЛЕКТРОННЫЙ МИКРОСКОП", hint: "Прибор для наблюдения за мельчайшими частицами" },
+        { word: "ИНТЕЛЛЕКТУАЛЬНЫЙ ПОТЕНЦИАЛ", hint: "Совокупность знаний и умений человека" },
+      ]
+    };
+
+    let gameMode = 'single';
+    let maxPlayers = 1;
+    let levelType = 'easy';
+    let wordToGuess = '';
+    let hint = '';
+    let guessedLetters = [];
+    let gameStatus = 'playing'; // playing, win
+    let activePlayer = 0;
+    let scores = [];
+
+    function startNewGame() {
+      const words = wordsByDifficulty[levelType];
+      const entry = words[Math.floor(Math.random() * words.length)];
+      wordToGuess = entry.word;
+      hint = entry.hint;
+      guessedLetters = [];
+      gameStatus = 'playing';
+      activePlayer = 0;
+      scores = Array(maxPlayers).fill(0);
+
+      renderHint();
+      renderWord();
+      renderKeyboard();
+      updateScoresUI();
+      document.getElementById('status').textContent = '';
+      document.getElementById('guessInput').value = '';
+      showScoresIfMulti();
+    }
+
+    function showScoresIfMulti() {
+      const scoresDiv = document.getElementById('scores');
+      scoresDiv.style.display = gameMode === 'multi' ? 'flex' : 'none';
+    }
+
+    function renderHint() {
+      document.getElementById('hint').textContent = hint;
+    }
+
+    function renderWord() {
+      const container = document.getElementById('wordDisplay');
+      container.innerHTML = '';
+      for (let letter of wordToGuess) {
+        const div = document.createElement('div');
+        div.className = 'letter-box';
+        if (guessedLetters.includes(letter) || letter === ' ') {
+          div.textContent = letter;
+        }
+        container.appendChild(div);
+      }
+    }
+
+    function renderKeyboard() {
+      const container = document.getElementById('keyboard');
+      container.innerHTML = '';
+      const letters = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+
+      for (let letter of letters) {
+        const btn = document.createElement('button');
+        btn.className = 'key';
+        btn.textContent = letter;
+        btn.disabled = guessedLetters.includes(letter);
+        btn.onclick = () => handleLetterClick(letter);
+        container.appendChild(btn);
+      }
+    }
+
+    function handleLetterClick(letter) {
+      if (gameStatus !== 'playing') return;
+
+      if (!guessedLetters.includes(letter)) {
+        guessedLetters.push(letter);
+
+        if (wordToGuess.includes(letter)) {
+          scores[activePlayer] += 1;
+        } else {
+          switchPlayer();
+        }
+
+        updateScoresUI();
+        renderWord();
+        renderKeyboard();
+      }
+    }
+
+    function guessWord() {
+      if (gameStatus !== 'playing') return;
+      const input = document.getElementById('guessInput');
+      const word = input.value.trim().toUpperCase();
+
+      if (word === wordToGuess) {
+        gameStatus = 'win';
+        scores[activePlayer] += 10;
+        updateScoresUI();
+        document.getElementById('status').textContent = 'Поздравляем! Вы победили!';
+        disableKeyboard();
+      } else {
+        switchPlayer();
+        updateScoresUI();
+      }
+
+      input.value = '';
+    }
+
+    function switchPlayer() {
+      if (gameMode === 'multi') {
+        activePlayer = (activePlayer + 1) % maxPlayers;
+      }
+    }
+
+    function updateScoresUI() {
+      const scoresDiv = document.getElementById('scores');
+      scoresDiv.innerHTML = '';
+
+      for (let i = 0; i < maxPlayers; i++) {
+        const playerDiv = document.createElement('div');
+        playerDiv.className = 'player-score';
+        if (gameMode === 'multi' && i === activePlayer) {
+          playerDiv.classList.add('active-player');
+        }
+        playerDiv.textContent = `Игрок ${i + 1}: ${scores[i]} золота`;
+        scoresDiv.appendChild(playerDiv);
+      }
+    }
+
+    function disableKeyboard() {
+      const keys = document.querySelectorAll('.key');
+      keys.forEach(k => k.disabled = true);
+    }
+
+    // Event listeners
+    document.querySelectorAll('[data-mode]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-mode]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        gameMode = btn.dataset.mode;
+        maxPlayers = parseInt(btn.dataset.players || 1);
+        startNewGame();
+      });
+    });
+
+    document.querySelectorAll('[data-level]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-level]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        levelType = btn.dataset.level;
+        startNewGame();
+      });
+    });
+
+    startNewGame();
+  </script>
+</body>
+</html>
